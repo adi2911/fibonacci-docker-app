@@ -22,6 +22,14 @@ class Fibonacci extends Component{
         const seenIndexes=await axios.get('/api/values/all')
         this.setState({seenIndexes:seenIndexes.data})
     }
+    handleSubmit= async(event)=>{
+        event.preventDefault();
+        console.log("I was called")
+        await axios.post('/api/values',{
+            index:this.state.index
+        })
+        this.setState({index:''})
+    }
     rendedSeenIndexes()
     {
         return this.state.seenIndexes.map(({number})=>number).join(',')
@@ -39,24 +47,18 @@ class Fibonacci extends Component{
         }
         return entries;
     }
-    handleSubmit= async(event)=>{
-        event.preventDefault();
-        await axios.post('/api/values',{
-            index:this.state.index
-        })
-        this.setState({index:''})
-    }
+   
 
     render(){
         return(
             <div>
-                <form>
+                <form onSubmit={this.handleSubmit}>
                     <label> Enter your index</label>
                     <input value={this.state.index} onChange={event=>this.setState({index:event.target.value})}/>
-                    <button onSubmit={this.handleSubmit}>Submit</button>
+                    <button>Submit</button>
                 </form>
-                <h3>Indexes I have seen: {rendedSeenIndexes} </h3>
-                <h3> Calculated Values: {renderCalculatedValues}</h3>
+                <h3>Indexes I have seen: {this.rendedSeenIndexes()} </h3>
+                <h3> Calculated Values: {this.renderCalculatedValues()}</h3>
             </div>
         )
     }

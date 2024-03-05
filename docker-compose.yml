@@ -1,0 +1,51 @@
+version: '3'
+services:
+  postgres:
+    image: 'postgres:latest'
+  redis:
+    image: 'redis:latest'
+  express-server:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./server
+    volumes:
+      - /app/node_modules
+      - ./server:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379 #port is seen from default port mentioned in image details from docker hub
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password #this is the default password
+      - PGPORT=5432 # All details of postgres are taken from image information from docker hub
+  react-client:
+    build: 
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
+    environment:
+      - WDS_SOCKET_PORT=0
+  nginx:
+    restart: always
+    depends_on:
+      - express-server
+      - react-client
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports: 
+      - '3050:80'
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /app/node_modules
+      - ./worker:/app
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
