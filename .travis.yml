@@ -14,6 +14,14 @@ after_success:
   - docker build -t adi2911/express-server ./server
   - docker build -t adi2911/worker ./worker
   - docker build -t adi2911/nginx ./nginx
+  #Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push docker hub
+  - docker push adi2911/react-client
+  - docker push adi2911/express-server
+  - docker push adi2911/worker
+  - docker push adi2911/nginx
+
 
 
 
