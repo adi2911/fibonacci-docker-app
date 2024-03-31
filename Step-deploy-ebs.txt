@@ -1,0 +1,79 @@
+To replace Travis with Github Actions you can do the following:
+
+1. Delete your .travis.yml file from the local project.
+
+2. Navigate to your Github repository.
+
+3. Click Settings
+
+4. Click Secrets
+
+5. Click Actions
+
+6. Click New repository secret
+
+7. Create key/value pair secrets for AWS_ACCESS_KEY, AWS_SECRET_KEY, DOCKER_USERNAME, DOCKER_PASSWORD.
+
+Important - You do not need to create an environment or environment secrets. Doing so will cause a failure of the action without making additional changes to the workflow file.
+
+All that is required is simply creating the repository secrets as shown below:
+
+
+8. In your local development environment, create a .github directory at the root of your project
+
+9. Create a workflows directory inside the new .github directory
+
+10. In the workflows directory create a deploy.yaml file which should contain the following code (name does not matter):
+
+* Remember to change your application_name, environment_name, existing_bucket_name, and region to the values used by your AWS Elastic Beanstalk environment
+
+* Remember to check your default branch to see if it is main or master and update the branches field accordingly.
+
+
+
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - main # check your repo, your default branch might be master!
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker build -t cygnetops/react-test -f ./client/Dockerfile.dev ./client
+      - run: docker run -e CI=true cygnetops/react-test npm test
+ 
+      - run: docker build -t cygnetops/multi-client-10-14 ./client
+      - run: docker build -t cygnetops/multi-nginx-10-14 ./nginx
+      - run: docker build -t cygnetops/multi-server-10-14 ./server
+      - run: docker build -t cygnetops/multi-worker-10-14 ./worker
+ 
+      - run: docker push cygnetops/multi-client-10-14
+      - run: docker push cygnetops/multi-nginx-10-14
+      - run: docker push cygnetops/multi-server-10-14
+      - run: docker push cygnetops/multi-worker-10-14
+ 
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+ 
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: multi-gh
+          environment_name: Multigh-env
+          existing_bucket_name: elasticbeanstalk-us-east-1-923445559289
+          region: us-east-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
+11. Run the typical git add, commit and push commands
+
+12. Click Actions in the Github repository dashboard to view each step of the workflow.
+
+Note - This code is using a well-supported marketplace action, more info can be found here:
+
+https://github.com/einaregilsson/beanstalk-deployx

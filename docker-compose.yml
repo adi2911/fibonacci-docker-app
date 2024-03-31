@@ -1,51 +1,32 @@
 version: '3'
 services:
-  postgres:
-    image: 'postgres:latest'
-  redis:
-    image: 'redis:latest'
-  express-server:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./server
-    volumes:
-      - /app/node_modules
-      - ./server:/app
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379 #port is seen from default port mentioned in image details from docker hub
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGPASSWORD=postgres_password #this is the default password
-      - PGPORT=5432 # All details of postgres are taken from image information from docker hub
   react-client:
-    build: 
-      dockerfile: Dockerfile.dev
-      context: ./client
-    volumes:
-      - /app/node_modules
-      - ./client:/app
+    image: "adi2911/docker-client"
+    mem_limit: 128m
+    hostname: react-client
+  express-server:
+    image: "adi2911/docker-server"
+    mem_limit: 128m
+    hostname: express-server
     environment:
-      - WDS_SOCKET_PORT=0
-  nginx:
-    restart: always
-    depends_on:
-      - express-server
-      - react-client
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./nginx
-    ports: 
-      - '3050:80'
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT 
+      - PGUSER=$PGUSER
+      - PGHOST=$PGHOST
+      - PGDATABASE=$PGDATABASE
+      - PGPASSWORD=$PGPASSWORD 
+      - PGPORT=$PGPORT 
   worker:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./worker
-    volumes:
-      - /app/node_modules
-      - ./worker:/app
+    image: "adi2911/docker-worker"
+    mem_limit: 128m
+    hostname: worker
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+  nginx:
+    image: "adi2911/docker-nginx"
+    mem_limit: 128m
+    hostname: nginx
+    ports: 
+      - "80:80"
+ 

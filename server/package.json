@@ -9,6 +9,6 @@
     },
     "scripts": {
         "dev":"NODE_ENV=dvelopment nodemon",
-        "start":"NODE_ENV=production index.js"
+        "start":"NODE_ENV=production node index.js"
     }
 }
